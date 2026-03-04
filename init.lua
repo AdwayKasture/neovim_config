@@ -56,7 +56,7 @@ require("lazy").setup({
     "EdenEast/nightfox.nvim",
     lazy = false,
     priority = 1000,
-    config = function() vim.cmd([[colorscheme nightfox]]) end,
+    config = function() vim.cmd([[colorscheme duskfox]]) end,
   },
   {
      "nvim-telescope/telescope.nvim",tag = "0.1.8",
