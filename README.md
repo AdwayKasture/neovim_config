@@ -1,10 +1,15 @@
 # Neovim Configuration
 
+A minimal, reproducible Neovim setup for Elixir, Gleam, Go, and Zig.
+
 ## Neovim Version
 
-- **Version**: NVIM v0.11.5
+- **Installed version**: NVIM v0.12.3
+- **Minimum required**: NVIM v0.12.0
 - **Build Type**: RelWithDebInfo
-- **LuaJIT**: 2.1.1741730670
+- **LuaJIT**: 2.1.1774638290
+
+The config checks the Neovim version on startup and exits early if it is older than v0.12.0.
 
 ---
 
@@ -12,27 +17,35 @@
 
 Before installing, ensure you have:
 
-- **Neovim v0.10+** (for native snippet support)
-- **Git** (for cloning and lazy.nvim)
+- **Neovim v0.12+** (required for `vim.lsp.config` / `vim.lsp.enable` and native snippets)
+- **Git** (for cloning plugins and lazy.nvim)
 - **ripgrep (rg)** - Required for Telescope live grep (`<leader>fg`)
 - **A Nerd Font** (optional) - For file icons in neo-tree
 
-### Install ripgrep on Ubuntu/Debian:
+### Install ripgrep
+
 ```bash
+# Ubuntu/Debian
 sudo apt-get install ripgrep
+
+# macOS
+brew install ripgrep
+
+# Arch
+sudo pacman -S ripgrep
 ```
 
 ---
 
 ## Plugins
 
-This configuration uses [lazy.nvim](https://github.com/folke/lazy.nvim) as the plugin manager.
+This configuration uses [lazy.nvim](https://github.com/folke/lazy.nvim) as the plugin manager. Plugin versions are pinned in `lazy-lock.json`.
 
-### Core Plugins
+### Core plugins
 
 | Plugin | Description |
 |--------|-------------|
-| [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) | LSP configuration for Elixir, Gleam, and Go |
+| [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) | LSP configuration helper |
 | [nightfox.nvim](https://github.com/EdenEast/nightfox.nvim) | Colorscheme (Duskfox) |
 | [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) | Fuzzy finder for files, buffers, and grep |
 | [neo-tree.nvim](https://github.com/nvim-neo-tree/neo-tree.nvim) | File explorer tree |
@@ -41,24 +54,6 @@ This configuration uses [lazy.nvim](https://github.com/folke/lazy.nvim) as the p
 | [cmp-nvim-lsp](https://github.com/hrsh7th/cmp-nvim-lsp) | LSP completion source |
 | [cmp-buffer](https://github.com/hrsh7th/cmp-buffer) | Buffer completion source |
 | [cmp-path](https://github.com/hrsh7th/cmp-path) | Path completion source |
-
-### AI/Assist Plugins
-
-| Plugin | Description |
-|--------|-------------|
-| [avante.nvim](https://github.com/yetone/avante.nvim) | AI-powered code assistance |
-| [copilot.lua](https://github.com/zbirenbaum/copilot.lua) | GitHub Copilot integration |
-
-### Utility Plugins
-
-| Plugin | Description |
-|--------|-------------|
-| [fzf-lua](https://github.com/ibhagwan/fzf-lua) | FZF integration for fuzzy finding |
-| [mini.pick](https://github.com/echasnovski/mini.pick) | Minimal picker/fuzzy finder |
-| [snacks.nvim](https://github.com/folke/snacks.nvim) | Collection of small QoL plugins |
-| [dressing.nvim](https://github.com/stevearc/dressing.nvim) | Improved UI for input/select |
-| [img-clip.nvim](https://github.com/HakonHarnes/img-clip.nvim) | Paste images from clipboard |
-| [render-markdown.nvim](https://github.com/MeanderingProgrammer/render-markdown.nvim) | Markdown rendering improvements |
 
 ### Dependencies
 
@@ -70,44 +65,62 @@ This configuration uses [lazy.nvim](https://github.com/folke/lazy.nvim) as the p
 
 ---
 
-## LSP Servers Configured
+## LSP Servers
 
-- **Elixir**: elixirls (`/home/archon/.elixir-ls/release/language_server.sh`)
-  - ⚠️ **Note**: Hardcoded path - update for your system
-- **Gleam**: gleam lsp
-- **Go**: gopls
+Configured using Neovim's built-in `vim.lsp.config()` and `vim.lsp.enable()` APIs.
+
+| Language | Server | Command |
+|----------|--------|---------|
+| Elixir | elixirls | `$ELIXIR_LS_PATH` or `$HOME/.elixir-ls/release/language_server.sh` or `elixir-ls` |
+| Gleam | gleam | `gleam lsp` |
+| Go | gopls | `gopls` |
+| Zig | zls | `zls` |
+
+### ElixirLS path
+
+The config looks for ElixirLS in this order:
+
+1. `$ELIXIR_LS_PATH` environment variable
+2. `$HOME/.elixir-ls/release/language_server.sh`
+3. `elixir-ls` on your `$PATH`
+
+If your ElixirLS is installed somewhere else, set the environment variable:
+
+```bash
+export ELIXIR_LS_PATH=/path/to/your/language_server.sh
+```
 
 ---
 
 ## Treesitter Parsers
 
+Installed automatically on startup if missing:
+
 - elixir
 - eex
 - heex
+- zig
+- markdown
+- markdown_inline
 
 ---
 
-## Custom Key Bindings
+## Key Bindings
 
-### Leader Keys
+### Leader keys
 
 - **Leader**: `<Space>`
 - **Local Leader**: `,`
 
-### Window Navigation
+### Window / tab navigation
 
 | Key | Action |
 |-----|--------|
 | `<C-h>` | Switch to next window |
-
-### Tab Navigation
-
-| Key | Action |
-|-----|--------|
 | `<C-j>` | Next tab |
 | `<leader>tt` | Open terminal in new tab |
 
-### Telescope (File Search)
+### Telescope
 
 | Key | Action |
 |-----|--------|
@@ -115,11 +128,17 @@ This configuration uses [lazy.nvim](https://github.com/folke/lazy.nvim) as the p
 | `<leader>fb` | List buffers |
 | `<leader>fg` | Live grep (search in files) |
 | `<leader>fh` | Help tags |
-| `<leader>fd` | Live grep with yanked text (NOTE: crashes if empty buffer yanked) |
+| `<leader>fd` | Live grep with trimmed yanked text |
 
-### File Explorer
+Pressing `<CR>` on a Telescope result also reveals the file in Neo-tree when Neo-tree is open.
 
-- Neo-tree is toggled on startup
+### File explorer
+
+| Key | Action |
+|-----|--------|
+| `<leader>e` | Toggle Neo-tree |
+
+Neo-tree automatically opens on startup.
 
 ### Autocompletion
 
@@ -133,81 +152,83 @@ This configuration uses [lazy.nvim](https://github.com/folke/lazy.nvim) as the p
 ## Settings
 
 - Tab stop: 4 spaces
+- Shift width: 4 spaces
+- Expand tabs to spaces
 - Line numbers: enabled
+- True color (`termguicolors`): enabled
 - Diagnostic virtual text: enabled
+- Diagnostic underline: enabled
+- Diagnostic signs: disabled
 - Colorscheme: Duskfox
 
 ---
 
 ## Installation
 
-1. Ensure prerequisites are installed (Neovim v0.10+, git, ripgrep)
+1. Ensure prerequisites are installed (Neovim v0.12+, git, ripgrep).
 2. Clone this repository to your Neovim config directory:
+
    ```bash
    git clone https://github.com/AdwayKasture/neovim_config.git ~/.config/nvim
    ```
-3. Start Neovim - lazy.nvim will bootstrap automatically and install all plugins
+
+3. Start Neovim. lazy.nvim will bootstrap automatically and install all pinned plugins:
+
    ```bash
    nvim
    ```
-4. For LSP support, ensure language servers are installed:
-   - ElixirLS for Elixir (update the hardcoded path in `init.lua`)
-   - Gleam LSP for Gleam
-   - gopls for Go
+
+4. Install the language servers you need:
+   - [ElixirLS](https://github.com/elixir-lsp/elixir-ls) for Elixir
+   - [Gleam LSP](https://gleam.run/language-server/) for Gleam
+   - [gopls](https://github.com/golang/tools/tree/master/gopls) for Go
+   - [zls](https://github.com/zigtools/zls) for Zig
+
+---
+
+## Reproducibility
+
+This repo includes `lazy-lock.json`, which pins every plugin to an exact Git commit. After cloning:
+
+- Run `:Lazy restore` to force the exact commits listed in the lock file.
+- Run `:Lazy update` if you want to move to newer plugin versions.
+
+To capture changes from your live setup back into the repo, copy `~/.config/nvim/init.lua` and `~/.config/nvim/lazy-lock.json` into the repo and commit.
 
 ---
 
 ## Troubleshooting
 
-### "attempt to call a nil value" error with Telescope
+### "This config requires Neovim >= 0.12.0"
 
-**Cause**: Telescope keymaps may be triggered before telescope is fully loaded.
+Upgrade Neovim to v0.12.0 or newer. This config uses `vim.lsp.config()` and the new `nvim-treesitter` API.
 
-**Solution**: 
-- Restart Neovim and wait for all plugins to install on first run
-- Run `:Lazy sync` to ensure all plugins are up to date
-- Check that ripgrep is installed: `which rg`
+### Telescope live grep (`<leader>fg`) doesn't work
 
-### Live grep (`<leader>fg`) doesn't work
+Make sure ripgrep is installed and on your `$PATH`:
 
-**Cause**: ripgrep (rg) not installed.
-
-**Solution**: Install ripgrep:
 ```bash
-# Ubuntu/Debian
-sudo apt-get install ripgrep
-
-# macOS
-brew install ripgrep
-
-# Arch
-sudo pacman -S ripgrep
+which rg
 ```
 
-### Elixir LSP not working
+### Elixir LSP not starting
 
-**Cause**: Hardcoded path doesn't exist on your system.
+Check that the ElixirLS path exists:
 
-**Solution**: Update line 33 in `init.lua`:
-```lua
-cmd = { "/home/archon/.elixir-ls/release/language_server.sh" },
+```bash
+ls "$HOME/.elixir-ls/release/language_server.sh"
 ```
-Change to your actual ElixirLS installation path.
+
+If it is installed elsewhere, set `$ELIXIR_LS_PATH` before launching Neovim.
 
 ### Colorscheme not loading
 
-**Cause**: Plugin not installed properly.
-
-**Solution**: Run `:Lazy sync` in Neovim to reinstall plugins.
+Run `:Lazy sync` in Neovim to reinstall plugins using the pinned versions.
 
 ### Plugin lock file issues
 
-This repo includes `lazy-lock.json` which pins exact plugin versions. If you want to update plugins:
-```vim
-:Lazy update
-```
+If plugins look out of sync with the lock file:
 
-To use the exact versions from this repo:
 ```vim
 :Lazy restore
 ```
@@ -221,13 +242,3 @@ To use the exact versions from this repo:
 ├── init.lua          # Main configuration file
 └── lazy-lock.json    # Plugin version lock file
 ```
-
----
-
-## Version Control
-
-This configuration uses `lazy-lock.json` to ensure reproducible plugin versions across machines. When cloning to a new machine:
-
-1. The lock file ensures you get the exact same plugin commits
-2. Run `:Lazy restore` if you want to force the locked versions
-3. Run `:Lazy update` if you want to update to latest versions
