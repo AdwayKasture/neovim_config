@@ -140,6 +140,14 @@ Pressing `<CR>` on a Telescope result also reveals the file in Neo-tree when Neo
 
 Neo-tree automatically opens on startup.
 
+### Google search
+
+| Key | Action |
+|-----|--------|
+| `<leader>gg` | Open Google search popup |
+
+Type a query and press `<CR>` to open the results in Chrome/Chromium (or Chrome on Windows when running under WSL). Press `<Esc>` or `q` to close the popup without searching.
+
 ### Autocompletion
 
 | Key | Action |

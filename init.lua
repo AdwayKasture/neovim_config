@@ -227,7 +227,96 @@ require("lazy").setup({
   },
 })
 
--- 5. Telescope keymaps -------------------------------------------------------
+-- 5. Google search popup -----------------------------------------------------
+local function google_search_popup()
+  local Input = require("nui.input")
+
+  local input = Input({
+    relative = "editor",
+    position = "50%",
+    size = { width = 60, height = 10 },
+    border = {
+      style = "rounded",
+      text = {
+        top = " Google Search ",
+        top_align = "center",
+      },
+    },
+    win_options = {
+      winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+    },
+  }, {
+    prompt = "> ",
+    default_value = "",
+    on_submit = function(query)
+      local trimmed = vim.trim(query)
+      if trimmed == "" then
+        return
+      end
+
+      -- URL-encode the query (spaces become '+').
+      local encoded = trimmed:gsub(" ", "+")
+      encoded = encoded:gsub("([^A-Za-z0-9%-_.~+])", function(c)
+        return string.format("%%%02X", string.byte(c))
+      end)
+
+      local url = "https://www.google.com/search?q=" .. encoded
+
+      local function is_wsl()
+        local f = io.open("/proc/version", "r")
+        if f then
+          local content = (f:read("*a") or ""):lower()
+          f:close()
+          return content:find("microsoft") or content:find("wsl")
+        end
+        return false
+      end
+
+      local function notify_opened()
+        vim.notify("Opened Google search: " .. trimmed, vim.log.levels.INFO)
+      end
+
+      if is_wsl() then
+        -- Open Chrome on the Windows side via cmd.exe.
+        vim.fn.jobstart({ "cmd.exe", "/c", "start", "chrome", url }, { detach = true })
+        notify_opened()
+        return
+      end
+
+      -- Prefer Google Chrome, fall back to Chromium variants.
+      local browsers = { "google-chrome", "google-chrome-stable", "chromium", "chromium-browser" }
+      local browser = nil
+      for _, b in ipairs(browsers) do
+        if vim.fn.executable(b) == 1 then
+          browser = b
+          break
+        end
+      end
+
+      if not browser then
+        vim.notify("No Chrome/Chromium browser found in PATH", vim.log.levels.ERROR)
+        return
+      end
+
+      vim.fn.jobstart({ browser, url }, { detach = true })
+      notify_opened()
+    end,
+  })
+
+  input:mount()
+
+  -- Close the popup with Esc or q.
+  input:map("n", "<Esc>", function()
+    input:unmount()
+  end, { noremap = true })
+  input:map("n", "q", function()
+    input:unmount()
+  end, { noremap = true })
+end
+
+vim.keymap.set("n", "<leader>gg", google_search_popup, { desc = "Google search in Chrome" })
+
+-- 6. Telescope keymaps -------------------------------------------------------
 local builtin = require("telescope.builtin")
 vim.keymap.set("n", "<leader>ff", builtin.find_files, { desc = "Telescope find files" })
 vim.keymap.set("n", "<leader>fb", builtin.buffers, { desc = "Telescope buffers" })
@@ -245,7 +334,7 @@ vim.keymap.set("n", "<leader>fd", function()
   end
 end, { desc = "Telescope live_grep with trimmed yanked text" })
 
--- 6. Neo-tree (auto-open on startup + toggle keymap) -------------------------
+-- 7. Neo-tree (auto-open on startup + toggle keymap) -------------------------
 local function toggle_neo_tree()
   require("neo-tree.command").execute({ toggle = true })
 end
