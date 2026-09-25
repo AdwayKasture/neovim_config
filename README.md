@@ -54,6 +54,7 @@ This configuration uses [lazy.nvim](https://github.com/folke/lazy.nvim) as the p
 | [cmp-nvim-lsp](https://github.com/hrsh7th/cmp-nvim-lsp) | LSP completion source |
 | [cmp-buffer](https://github.com/hrsh7th/cmp-buffer) | Buffer completion source |
 | [cmp-path](https://github.com/hrsh7th/cmp-path) | Path completion source |
+| [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) | Git signs, blame, and diff |
 
 ### Dependencies
 
@@ -139,6 +140,14 @@ Pressing `<CR>` on a Telescope result also reveals the file in Neo-tree when Neo
 | `<leader>e` | Toggle Neo-tree |
 
 Neo-tree automatically opens on startup.
+
+### Git (gitsigns)
+
+| Key | Action |
+|-----|--------|
+| `<leader>gb` | Blame line and copy commit hash to clipboard |
+| `<leader>gd` | Toggle diff of current file in a new tab |
+| `q` | Close the diff tab (inside diff view) |
 
 ### Google search
 

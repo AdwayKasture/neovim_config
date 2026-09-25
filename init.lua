@@ -225,6 +225,106 @@ require("lazy").setup({
       })
     end,
   },
+
+  {
+    "lewis6991/gitsigns.nvim",
+    config = function()
+      require("gitsigns").setup({
+        signs = {
+          add          = { text = "┃" },
+          change       = { text = "┃" },
+          delete       = { text = "_" },
+          topdelete    = { text = "‾" },
+          changedelete = { text = "~" },
+          untracked    = { text = "┆" },
+        },
+        current_line_blame = false,
+        current_line_blame_opts = {
+          delay = 300,
+          virt_text_pos = "eol",
+        },
+        current_line_blame_formatter = "<author>, <author_time:%Y-%m-%d> — <summary>",
+
+        on_attach = function(bufnr)
+          local gs = package.loaded.gitsigns
+
+          local function map(mode, l, r, desc)
+            vim.keymap.set(mode, l, r, { buffer = bufnr, desc = desc })
+          end
+
+          -- Blame line and copy commit hash to clipboard
+          map("n", "<leader>gb", function()
+            local file = vim.fn.expand("%:p")
+            local line = vim.fn.line(".")
+
+            gs.blame_line({ full = true })
+
+            if file == "" then
+              return
+            end
+
+            vim.system(
+              { "git", "blame", "-L", line .. "," .. line, "--porcelain", file },
+              {},
+              function(obj)
+                if obj.code ~= 0 then
+                  return
+                end
+
+                local hash = obj.stdout:match("^(\S+)")
+                if not hash or hash:match("^0+$") then
+                  vim.schedule(function()
+                    vim.notify("Line is not yet committed", vim.log.levels.WARN)
+                  end)
+                  return
+                end
+
+                vim.schedule(function()
+                  vim.fn.setreg("+", hash)
+                  vim.notify("Copied commit: " .. hash, vim.log.levels.INFO)
+                end)
+              end
+            )
+          end, "Blame line and copy commit")
+
+          -- Diff this file in a new tab (toggle)
+          local diff_tab = nil
+          map("n", "<leader>gd", function()
+            if diff_tab and vim.api.nvim_tabpage_is_valid(diff_tab) then
+              local current_tab = vim.api.nvim_get_current_tabpage()
+              vim.api.nvim_set_current_tabpage(diff_tab)
+              vim.cmd("tabclose")
+              if current_tab ~= diff_tab and vim.api.nvim_tabpage_is_valid(current_tab) then
+                vim.api.nvim_set_current_tabpage(current_tab)
+              end
+              diff_tab = nil
+              return
+            end
+
+            vim.cmd("tab split")
+            diff_tab = vim.api.nvim_get_current_tabpage()
+            gs.diffthis()
+
+            vim.schedule(function()
+              if not diff_tab or not vim.api.nvim_tabpage_is_valid(diff_tab) then
+                return
+              end
+              for _, win in ipairs(vim.api.nvim_tabpage_list_wins(diff_tab)) do
+                local dbuf = vim.api.nvim_win_get_buf(win)
+                vim.keymap.set("n", "q", function()
+                  if diff_tab and vim.api.nvim_tabpage_is_valid(diff_tab) then
+                    vim.api.nvim_set_current_tabpage(diff_tab)
+                    vim.cmd("tabclose")
+                    diff_tab = nil
+                  end
+                end, { buffer = dbuf, silent = true, desc = "Close diff tab" })
+              end
+            end)
+          end, "Toggle diff tab")
+        end,
+      })
+    end,
+  },
 })
 
 -- 5. Google search popup -----------------------------------------------------
